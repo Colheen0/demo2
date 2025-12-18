@@ -1,25 +1,37 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useRouter } from "expo-router";
 import { View, TextInput, TouchableOpacity, Text, StyleSheet, ScrollView, KeyboardAvoidingView, Platform } from "react-native";
 import { api } from "../api";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
-// Définition du type de réponse attendu de l'API
 type LoginResponse = {
   ok: boolean;
   token?: string;
   message?: string;
   data?: {
     _id: string;
-    // ...autres champs utilisateur si besoin
   };
 };
 
 export default function FormIn() {
   const [login, setLogin] = useState("");
   const [password, setPassword] = useState("");
+  const [isCheckingAuth, setIsCheckingAuth] = useState(true); 
   const [loading, setLoading] = useState(false);
   const router = useRouter();
+
+  // 1. Vérification automatique du token au démarrage
+  useEffect(() => {
+    const checkToken = async () => {
+      const token = await AsyncStorage.getItem("token");
+      if (token) {
+        router.replace('/hall_lsits');
+      } else {
+        setIsCheckingAuth(false); // On affiche le formulaire si pas de token
+      }
+    };
+    checkToken();
+  }, [router]);
 
   const handleLogin = async () => {
     setLoading(true);
@@ -28,8 +40,9 @@ export default function FormIn() {
       const data = response.data as LoginResponse;
       if (response.ok && data?.ok && data.token && data.data && data.data._id) {
         await AsyncStorage.setItem("userId", data.data._id);
+        await AsyncStorage.setItem("token", data.token);
         alert("Connexion réussie !");
-        router.replace('/hall_lsits'); // Redirection vers la page des listes
+        router.replace('/hall_lsits');
       } else {
         alert(data?.message || "Identifiants invalides");
       }
@@ -38,6 +51,11 @@ export default function FormIn() {
     }
     setLoading(false);
   };
+
+  // 2. Écran d'attente pendant la vérification du token
+  if (isCheckingAuth) {
+    return <View style={{ flex: 1, backgroundColor: "#f8f9fa" }} />;
+  }
 
   return (
     <KeyboardAvoidingView 
@@ -60,6 +78,7 @@ export default function FormIn() {
               value={login}
               onChangeText={setLogin}
               keyboardType="email-address"
+              autoCapitalize="none"
               editable={!loading}
             />
           </View>
@@ -100,93 +119,19 @@ export default function FormIn() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#f8f9fa",
-  },
-  scrollContent: {
-    flexGrow: 1,
-    justifyContent: "center",
-    paddingHorizontal: 20,
-    paddingVertical: 40,
-  },
-  header: {
-    marginBottom: 40,
-    alignItems: "center",
-  },
-  title: {
-    fontSize: 32,
-    fontWeight: "bold",
-    color: "#2c3e50",
-    marginBottom: 8,
-  },
-  subtitle: {
-    fontSize: 16,
-    color: "#7f8c8d",
-  },
-  formContainer: {
-    backgroundColor: "#fff",
-    borderRadius: 12,
-    padding: 24,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 5,
-  },
-  inputGroup: {
-    marginBottom: 20,
-  },
-  label: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: "#2c3e50",
-    marginBottom: 8,
-  },
-  input: {
-    borderWidth: 1.5,
-    borderColor: "#e0e6ed",
-    borderRadius: 8,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    fontSize: 16,
-    color: "#2c3e50",
-    backgroundColor: "#f8f9fa",
-  },
-  button: {
-    backgroundColor: "#3498db",
-    borderRadius: 8,
-    paddingVertical: 14,
-    alignItems: "center",
-    marginTop: 24,
-    shadowColor: "#3498db",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 5,
-  },
-  buttonDisabled: {
-    backgroundColor: "#bdc3c7",
-    shadowOpacity: 0,
-  },
-  buttonText: {
-    color: "#fff",
-    fontSize: 16,
-    fontWeight: "600",
-  },
-  footer: {
-    flexDirection: "row",
-    justifyContent: "center",
-    alignItems: "center",
-    marginTop: 20,
-  },
-  footerText: {
-    color: "#7f8c8d",
-    fontSize: 14,
-  },
-  link: {
-    color: "#3498db",
-    fontSize: 14,
-    fontWeight: "600",
-  },
+  container: { flex: 1, backgroundColor: "#f8f9fa" },
+  scrollContent: { flexGrow: 1, justifyContent: "center", paddingHorizontal: 20, paddingVertical: 40 },
+  header: { marginBottom: 40, alignItems: "center" },
+  title: { fontSize: 32, fontWeight: "bold", color: "#2c3e50", marginBottom: 8 },
+  subtitle: { fontSize: 16, color: "#7f8c8d" },
+  formContainer: { backgroundColor: "#fff", borderRadius: 12, padding: 24, elevation: 5 },
+  inputGroup: { marginBottom: 20 },
+  label: { fontSize: 14, fontWeight: "600", color: "#2c3e50", marginBottom: 8 },
+  input: { borderWidth: 1.5, borderColor: "#e0e6ed", borderRadius: 8, paddingHorizontal: 16, paddingVertical: 12, fontSize: 16, color: "#2c3e50", backgroundColor: "#f8f9fa" },
+  button: { backgroundColor: "#3498db", borderRadius: 8, paddingVertical: 14, alignItems: "center", marginTop: 24 },
+  buttonDisabled: { backgroundColor: "#bdc3c7" },
+  buttonText: { color: "#fff", fontSize: 16, fontWeight: "600" },
+  footer: { flexDirection: "row", justifyContent: "center", alignItems: "center", marginTop: 20 },
+  footerText: { color: "#7f8c8d", fontSize: 14 },
+  link: { color: "#3498db", fontSize: 14, fontWeight: "600" },
 });

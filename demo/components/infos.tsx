@@ -29,7 +29,7 @@ export default function UserInfo({
         <Text style={styles.headerTitle}>Informations du Compte</Text>
       </View>
 
-      {/* User Info Card */}
+      {/* carte d'info */}
       <View style={styles.card}>
         <View style={styles.infoGroup}>
           <View style={styles.infoRow}>
