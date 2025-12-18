@@ -10,18 +10,13 @@ export const api = create({
   },
 });
 
-// --- LE CODE À AJOUTER ---
 
-// On crée un "Async Transform" : 
-// À chaque fois que tu appelles api.get ou api.post, ce code s'exécute d'abord
 api.addAsyncRequestTransform(async (request) => {
   const token = await AsyncStorage.getItem("token");
 
   if (token) {
-    // On s'assure que les headers existent, sinon on crée un objet vide
     request.headers = request.headers || {};
     
-    // On ajoute le token
     request.headers["Authorization"] = `Bearer ${token}`;
   }
 });
