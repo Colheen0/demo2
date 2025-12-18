@@ -17,7 +17,7 @@ interface TaskApiResponse {
 export default function List() {
   const { id: listId, name: listName } = useLocalSearchParams<{ id: string; name: string }>();
   const [tasks, setTasks] = useState<any[]>([]);
-  const router = useRouter(); // Hook pour la navigation
+  const router = useRouter();
 
   useEffect(() => {
     const fetchTasks = async () => {
@@ -73,7 +73,6 @@ export default function List() {
   const handleAddTask = async () => {
     if (!listId) return;
     try {
-        // On envoie le listId, mais PAS le userId (le token s'en occupe)
         const response = await api.post("/task/ajout_task", { name: "Nouvelle tâche", listId });
         const data = response.data as TaskApiResponse;
         
@@ -87,7 +86,6 @@ export default function List() {
 
   const handleDeleteTask = async (id: string) => {
     try {
-        // Backend vérifie que la tâche t'appartient via le token
         const response = await api.post("/task/delete_task", { _id: id });
         if (response.ok) {
             setTasks(tasks.filter(task => task.id !== id));

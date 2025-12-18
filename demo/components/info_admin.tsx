@@ -66,7 +66,6 @@ function AdminBubble({ icon, label, value, onSave }: AdminBubbleProps) {
   );
 }
 
-// --- COMPOSANT PRINCIPAL ---
 
 interface InfoAdminProps {
   name: string;
@@ -87,20 +86,17 @@ export default function InfoAdmin({
   return (
     <View style={styles.container}>
       
-      {/* En-tête de la carte utilisateur */}
       <View style={styles.header}>
         <View style={styles.avatar}>
           <Ionicons name="person" size={32} color="#fff" />
         </View>
         
-        {/* J'ai regroupé le titre et le sous-titre dans une View pour qu'ils soient l'un sous l'autre */}
         <View>
           <Text style={styles.headerTitle}>Gestion Utilisateur</Text>
           <Text style={styles.headerSubtitle}>Maintenir une info pour modifier</Text>
         </View>
       </View>
 
-      {/* Liste des champs modifiables */}
       <View style={styles.fieldsContainer}>
         <AdminBubble 
           icon="person" 
@@ -117,7 +113,6 @@ export default function InfoAdmin({
         />
       </View>
 
-      {/* Bouton de suppression */}
       <TouchableOpacity style={styles.deleteButton} onPress={onDeleteUser}>
         <Ionicons name="trash-outline" size={20} color="#fff" />
         <Text style={styles.deleteText}>Supprimer cet utilisateur</Text>

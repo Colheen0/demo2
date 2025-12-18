@@ -40,7 +40,7 @@ router.post("/get_task", auth, async (req, res) => {
         const { _id } = req.body;
         const userId = req.auth.userId;
 
-        // SÉCURITÉ : On ne renvoie que si la tâche appartient à cet utilisateur
+        // On ne renvoie que si la tâche appartient à cet utilisateur
         const task = await TaskObject.findOne({ _id: _id, user: userId });
         
         if (!task) {
@@ -59,7 +59,7 @@ router.post("/tasks_by_list", auth, async (req, res) => {
         const { listId } = req.body;
         const userId = req.auth.userId;
 
-        // SÉCURITÉ : On ne renvoie que les tâches qui appartiennent à cet utilisateur
+        // On ne renvoie que les tâches qui appartiennent à cet utilisateur
         const tasks = await TaskObject.find({ list: listId, user: userId });
         
         res.status(200).send({ ok: true, count: tasks.length, tasks });
@@ -97,7 +97,7 @@ router.patch("/update_task", auth, async (req, res) => {
         if (typeof new_name === 'string') updateFields.name = new_name.trim().toLowerCase();
         if (typeof completer === 'boolean') updateFields.completer = completer;
 
-        // SÉCURITÉ : findOneAndUpdate avec le filtre user
+        // findOneAndUpdate avec le filtre user
         const updatedTask = await TaskObject.findOneAndUpdate(
             { _id: _id, user: userId },
             updateFields,

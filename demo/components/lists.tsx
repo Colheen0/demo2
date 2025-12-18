@@ -7,11 +7,10 @@ interface ListItemProps {
   name: string;
   onPress?: () => void;
   onDelete?: () => void;
-  onUpdate?: (newName: string) => void; // Ajout de la prop onUpdate
+  onUpdate?: (newName: string) => void; 
 }
 
 export default function ListItem({ id, name, onPress, onDelete, onUpdate }: ListItemProps) {
-  // États pour gérer l'édition (comme dans Task.tsx)
   const [isEditing, setIsEditing] = useState(false);
   const [editedName, setEditedName] = useState(name);
 
@@ -31,7 +30,6 @@ export default function ListItem({ id, name, onPress, onDelete, onUpdate }: List
 
   return (
     <View style={styles.wrapper}>
-      {/* Condition : Mode Édition OU Mode Affichage */}
       {isEditing ? (
         <View style={styles.container}>
           <TextInput
@@ -73,7 +71,6 @@ export default function ListItem({ id, name, onPress, onDelete, onUpdate }: List
         </TouchableOpacity>
       )}
       
-      {/* On cache le bouton supprimer pendant l'édition pour garder l'interface propre */}
       {!isEditing && (
         <TouchableOpacity 
           style={styles.deleteButton}
@@ -142,14 +139,13 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: "#e74c3c",
   },
-  // --- Nouveaux styles pour l'édition (copiés de Task.tsx) ---
   editInput: {
     backgroundColor: "#fff",
     borderRadius: 12,
     borderWidth: 2,
     borderColor: "#3498db",
     paddingHorizontal: 16,
-    paddingVertical: 14, // Un peu plus grand pour matcher la bulle
+    paddingVertical: 14,
     fontSize: 18,
     fontWeight: "600",
     color: "#2c3e50",
@@ -165,6 +161,6 @@ const styles = StyleSheet.create({
     padding: 6,
     backgroundColor: "#fff",
     borderRadius: 20,
-    elevation: 2, // Petit effet d'ombre pour les boutons
+    elevation: 2, 
   },
 });

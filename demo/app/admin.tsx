@@ -13,7 +13,7 @@ interface User {
   login: string;
 }
 
-// L'ID DE L'ADMIN (À protéger absolument)
+// L'ID DE L'ADMIN
 const ADMIN_ID = "6941549dda1971a5fab7a3f6";
 
 export default function AdminPanel() {
@@ -88,7 +88,6 @@ export default function AdminPanel() {
   };
 
   const handleUpdateUser = async (id: string, field: "name" | "login", value: string) => {
-    // Optionnel : Tu peux aussi empêcher de modifier le login de l'admin ici si tu veux
     if (id === ADMIN_ID && field === "login") {
          Alert.alert("Info", "Le login Admin ne peut pas être modifié ici par sécurité.");
          return;

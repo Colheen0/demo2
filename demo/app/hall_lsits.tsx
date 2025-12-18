@@ -58,7 +58,6 @@ export default function HallLists() {
       const data = response.data as { updatedList?: any };
 
       if (response.ok && data.updatedList) {
-        // Mise à jour locale de la liste pour un affichage instantané
         setLists(lists.map(list => 
           list.id === id ? { ...list, name: data.updatedList.name } : list
         ));
@@ -107,7 +106,7 @@ export default function HallLists() {
                 }}
                 // Suppression
                 onDelete={() => handleDeleteList(list.id)}
-                // Modification (Appui Long géré dans ListItem)
+                // Modification
                 onUpdate={(newName) => handleUpdateList(list.id, newName)}
               />
             ))

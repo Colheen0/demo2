@@ -13,7 +13,7 @@ const Schema = new mongoose.Schema(
     { timestamps: true }
   );
 
-// Hash password before saving
+// Hashage du mot de passe avant sauvegarde
 Schema.pre("save", async function(next) {
   if (!this.isModified("password")) return next();
   try {
@@ -25,7 +25,7 @@ Schema.pre("save", async function(next) {
   }
 });
 
-// Method to compare password
+// comparaison des mots de passe
 Schema.methods.comparePassword = async function(password) {
   return await bcrypt.compare(password, this.password);
 };
