@@ -45,35 +45,37 @@ export default function TaskItem({
     <View style={styles.wrapper}>
       <View style={styles.container}>
         {isEditing ? (
+          // --- MODE ÉDITION ---
           <TextInput
             style={styles.editInput}
             value={editedName}
             onChangeText={setEditedName}
             placeholder="Nom de la tâche"
             autoFocus={true}
+            onSubmitEditing={handleSaveEdit} 
           />
         ) : (
+          // --- MODE AFFICHAGE ---
           <TouchableOpacity 
             style={styles.bubble}
-            onPress={() => setIsEditing(true)}
+            onPress={handleToggle}            
+            onLongPress={() => setIsEditing(true)} 
             activeOpacity={0.7}
           >
             <Text style={[styles.title, isCompleted && styles.titleCompleted]}>
               {name}
             </Text>
             
-            <TouchableOpacity 
+            <View 
               style={[
                 styles.checkbox,
                 isCompleted && styles.checkboxCompleted
               ]}
-              onPress={handleToggle}
-              activeOpacity={0.7}
             >
               {isCompleted && (
                 <Ionicons name="checkmark" size={18} color="#fff" />
               )}
-            </TouchableOpacity>
+            </View>
           </TouchableOpacity>
         )}
 
@@ -83,13 +85,13 @@ export default function TaskItem({
               style={styles.actionButton}
               onPress={handleSaveEdit}
             >
-              <Ionicons name="checkmark-circle" size={20} color="#27ae60" />
+              <Ionicons name="checkmark-circle" size={32} color="#27ae60" />
             </TouchableOpacity>
             <TouchableOpacity 
               style={styles.actionButton}
               onPress={handleCancelEdit}
             >
-              <Ionicons name="close-circle" size={20} color="#e74c3c" />
+              <Ionicons name="close-circle" size={32} color="#e74c3c" />
             </TouchableOpacity>
           </View>
         )}
@@ -172,11 +174,12 @@ const styles = StyleSheet.create({
   editActions: {
     flexDirection: "row",
     justifyContent: "flex-end",
-    gap: 8,
+    gap: 12,
     marginBottom: 8,
+    marginTop: 4,
   },
   actionButton: {
-    padding: 6,
+    padding: 2,
   },
   deleteButton: {
     flexDirection: "row",
@@ -186,7 +189,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     borderRadius: 8,
     backgroundColor: "#fadbd8",
-    gap: 4,
+    alignSelf: 'flex-end',
   },
   deleteText: {
     fontSize: 12,
