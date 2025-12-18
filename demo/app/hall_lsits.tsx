@@ -14,17 +14,13 @@ export default function HallLists() {
   const [lists, setLists] = useState<List[]>([]);
   const router = useRouter();
 
-  // 1. Au chargement, on récupère les listes sans avoir besoin de l'ID manuellement
   useEffect(() => {
     fetchLists();
   }, []);
 
   const fetchLists = async () => {
     try {
-      // On utilise la route GET sécurisée. 
-      // Le token est envoyé automatiquement par ton fichier api.js
       const response = await api.get("/list/my-lists"); 
-      
       const data = response.data as { lists?: any[] };
       
       if (response.ok && data.lists) {
@@ -39,22 +35,41 @@ export default function HallLists() {
 
   const handleDeleteList = async (id: string) => {
     try {
-      // Le serveur vérifiera via le token si tu as le droit de supprimer cette liste
       const response = await api.post("/list/delete_list", { _id: id });
       
       if (response.ok) {
         setLists(lists.filter(list => list.id !== id));
       } else {
-        Alert.alert("Erreur", "Vous n'avez pas l'autorisation de supprimer cette liste");
+        Alert.alert("Erreur", "Suppression non autorisée");
       }
     } catch {
       Alert.alert("Erreur", "Suppression impossible");
     }
   };
 
+  // --- NOUVELLE FONCTION POUR MODIFIER ---
+  const handleUpdateList = async (id: string, newName: string) => {
+    try {
+      const response = await api.patch("/list/update_list", { 
+        _id: id, 
+        new_name: newName 
+      });
+      
+      const data = response.data as { updatedList?: any };
+
+      if (response.ok && data.updatedList) {
+        // Mise à jour locale de la liste pour un affichage instantané
+        setLists(lists.map(list => 
+          list.id === id ? { ...list, name: data.updatedList.name } : list
+        ));
+      }
+    } catch {
+      Alert.alert("Erreur", "Mise à jour impossible");
+    }
+  };
+
   const handleAddList = async () => {
     try {
-      // On envoie juste le nom. Le serveur extrait ton ID du token pour créer la liste.
       const response = await api.post("/list/ajout_list", { name: "Nouvelle liste" });
       const data = response.data as { list?: any };
       
@@ -90,7 +105,10 @@ export default function HallLists() {
                 onPress={() => {
                   router.push({ pathname: '/list', params: { id: list.id, name: list.name } });
                 }}
+                // Suppression
                 onDelete={() => handleDeleteList(list.id)}
+                // Modification (Appui Long géré dans ListItem)
+                onUpdate={(newName) => handleUpdateList(list.id, newName)}
               />
             ))
           ) : (
