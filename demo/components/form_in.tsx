@@ -13,6 +13,9 @@ type LoginResponse = {
   };
 };
 
+// L'ID de l'administrateur
+const ADMIN_ID = "6941549dda1971a5fab7a3f6";
+
 export default function FormIn() {
   const [login, setLogin] = useState("");
   const [password, setPassword] = useState("");
@@ -23,11 +26,22 @@ export default function FormIn() {
   // 1. Vérification automatique du token au démarrage
   useEffect(() => {
     const checkToken = async () => {
-      const token = await AsyncStorage.getItem("token");
-      if (token) {
-        router.replace('/hall_lsits');
-      } else {
-        setIsCheckingAuth(false); // On affiche le formulaire si pas de token
+      try {
+        const token = await AsyncStorage.getItem("token");
+        const storedUserId = await AsyncStorage.getItem("userId");
+
+        if (token && storedUserId) {
+          // CONDITION ADMIN AU DÉMARRAGE
+          if (storedUserId === ADMIN_ID) {
+            router.replace('/admin');
+          } else {
+            router.replace('/hall_lsits');
+          }
+        } else {
+          setIsCheckingAuth(false);
+        }
+      } catch (e) {
+        setIsCheckingAuth(false);
       }
     };
     checkToken();
@@ -38,11 +52,20 @@ export default function FormIn() {
     try {
       const response = await api.post("/user/signin", { login, password });
       const data = response.data as LoginResponse;
+      
       if (response.ok && data?.ok && data.token && data.data && data.data._id) {
-        await AsyncStorage.setItem("userId", data.data._id);
+        const userId = data.data._id;
+
+        await AsyncStorage.setItem("userId", userId);
         await AsyncStorage.setItem("token", data.token);
-        alert("Connexion réussie !");
-        router.replace('/hall_lsits');
+        
+        // CONDITION ADMIN À LA CONNEXION
+        if (userId === ADMIN_ID) {
+            router.replace('/admin'); // Redirection vers admin.tsx
+        } else {
+            router.replace('/hall_lsits');
+        }
+        
       } else {
         alert(data?.message || "Identifiants invalides");
       }
@@ -52,7 +75,7 @@ export default function FormIn() {
     setLoading(false);
   };
 
-  // 2. Écran d'attente pendant la vérification du token
+  // 2. Écran d'attente
   if (isCheckingAuth) {
     return <View style={{ flex: 1, backgroundColor: "#f8f9fa" }} />;
   }

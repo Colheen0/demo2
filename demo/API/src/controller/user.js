@@ -6,6 +6,7 @@ const config = require("../config");
 const auth = require("../middlewares/auth");
 
 const JWT_MAX_AGE = 60 * 60 * 24 * 7; // 7 jours
+const ADMIN_ID = "6941549dda1971a5fab7a3f6"; // ID de l'administrateur
 
 // 1. LOGIN (Public - Génère le badge)
 router.post("/signin", async (req, res) => {
@@ -51,8 +52,8 @@ router.put("/:id", auth, async (req, res) => {
         const userIdFromParams = req.params.id;
         const userIdFromToken = req.auth.userId; // Récupéré du badge !
 
-        // SÉCURITÉ : Un utilisateur ne peut pas modifier un autre compte
-        if (userIdFromParams !== userIdFromToken) {
+        // SÉCURITÉ : On autorise si c'est soi-même OU si c'est l'Admin
+        if (userIdFromParams !== userIdFromToken && userIdFromToken !== ADMIN_ID) {
             return res.status(403).send({ ok: false, message: "Vous n'avez pas le droit de modifier ce profil" });
         }
 
@@ -61,8 +62,17 @@ router.put("/:id", auth, async (req, res) => {
         
         if (!user) return res.status(404).send({ ok: false, message: "User not found" });
         
-        const passwordMatch = await user.comparePassword(old_password);
-        if (!passwordMatch) return res.status(401).send({ ok: false, message: "Old password incorrect" });
+        // VÉRIFICATION MOT DE PASSE :
+        // Si ce n'est PAS l'admin, on exige l'ancien mot de passe
+        if (userIdFromToken !== ADMIN_ID) {
+            if (!old_password) {
+                return res.status(400).send({ ok: false, message: "Ancien mot de passe requis pour modifier le compte" });
+            }
+            const passwordMatch = await user.comparePassword(old_password);
+            if (!passwordMatch) {
+                return res.status(401).send({ ok: false, message: "Ancien mot de passe incorrect" });
+            }
+        }
 
         if (new_login) user.login = new_login.trim().toLowerCase();
         if (new_name) user.name = new_name.trim();
@@ -81,8 +91,8 @@ router.delete("/delete_user/:id", auth, async (req, res) => {
         const userIdFromParams = req.params.id;
         const userIdFromToken = req.auth.userId;
 
-        // SÉCURITÉ : Un utilisateur ne peut supprimer que son propre compte
-        if (userIdFromParams !== userIdFromToken) {
+        // SÉCURITÉ : On autorise si c'est soi-même OU si c'est l'Admin
+        if (userIdFromParams !== userIdFromToken && userIdFromToken !== ADMIN_ID) {
             return res.status(403).send({ ok: false, message: "Action interdite" });
         }
 
@@ -108,6 +118,37 @@ router.get("/me", auth, async (req, res) => {
         res.status(200).send({ ok: true, user });
     } catch (error) {
         res.status(500).send({ ok: false, message: error.message });
+    }
+});
+
+// Route pour récupérer TOUS les utilisateurs (Protégée Admin)
+router.get("/all_users", auth, async (req, res) => {
+    try {
+        // 1. Vérifier si c'est l'Admin (via le token)
+        if (req.auth.userId !== ADMIN_ID) {
+            return res.status(403).send({ 
+                ok: false, 
+                message: "Accès refusé : Vous n'êtes pas administrateur." 
+            });
+        }
+
+        // 2. Récupérer tous les utilisateurs
+        const users = await UserObject.find({}).select("-password");
+
+        res.status(200).send({
+            ok: true,
+            message: "Liste des utilisateurs récupérée",
+            count: users.length,
+            users: users
+        });
+
+    } catch (error) {
+        console.log(error);
+        res.status(500).send({ 
+            ok: false, 
+            message: "Erreur serveur", 
+            error: error.message 
+        });
     }
 });
 
