@@ -3,7 +3,6 @@ import { View, StyleSheet, ScrollView, TouchableOpacity, Text, Alert } from "rea
 import { Ionicons } from "@expo/vector-icons";
 import ListItem from "@/components/lists";
 import { api } from "../api";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
 
 interface List {
@@ -13,36 +12,41 @@ interface List {
 
 export default function HallLists() {
   const [lists, setLists] = useState<List[]>([]);
-  const [userId, setUserId] = useState("");
   const router = useRouter();
 
+  // 1. Au chargement, on récupère les listes sans avoir besoin de l'ID manuellement
   useEffect(() => {
-    const fetchUserIdAndLists = async () => {
-      const id = await AsyncStorage.getItem("userId");
-      if (id) {
-        setUserId(id);
-        fetchLists(id);
-      }
-    };
-    fetchUserIdAndLists();
+    fetchLists();
   }, []);
 
-  const fetchLists = async (id: string) => {
+  const fetchLists = async () => {
     try {
-      const response = await api.post("/list/list", { user: id });
+      // On utilise la route GET sécurisée. 
+      // Le token est envoyé automatiquement par ton fichier api.js
+      const response = await api.get("/list/my-lists"); 
+      
       const data = response.data as { lists?: any[] };
+      
       if (response.ok && data.lists) {
         setLists(data.lists.map(l => ({ id: l._id, name: l.name })));
+      } else {
+        console.log("Erreur API:", response.data);
       }
     } catch (e) {
-      Alert.alert("Erreur", "Impossible de charger les listes");
+      Alert.alert("Erreur", "Impossible de charger les listes", e as any);
     }
   };
 
   const handleDeleteList = async (id: string) => {
     try {
-      await api.post("/list/delete_list", { _id: id });
-      setLists(lists.filter(list => list.id !== id));
+      // Le serveur vérifiera via le token si tu as le droit de supprimer cette liste
+      const response = await api.post("/list/delete_list", { _id: id });
+      
+      if (response.ok) {
+        setLists(lists.filter(list => list.id !== id));
+      } else {
+        Alert.alert("Erreur", "Vous n'avez pas l'autorisation de supprimer cette liste");
+      }
     } catch {
       Alert.alert("Erreur", "Suppression impossible");
     }
@@ -50,8 +54,10 @@ export default function HallLists() {
 
   const handleAddList = async () => {
     try {
-      const response = await api.post("/list/ajout_list", { name: "Nouvelle liste", user: userId });
+      // On envoie juste le nom. Le serveur extrait ton ID du token pour créer la liste.
+      const response = await api.post("/list/ajout_list", { name: "Nouvelle liste" });
       const data = response.data as { list?: any };
+      
       if (response.ok && data.list) {
         setLists([...lists, { id: data.list._id, name: data.list.name }]);
       }
@@ -105,71 +111,16 @@ export default function HallLists() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#f8f9fa",
-  },
-  scrollView: {
-    flex: 1,
-  },
-  header: {
-    paddingHorizontal: 16,
-    paddingVertical: 20,
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: "700",
-    color: "#2c3e50",
-    marginBottom: 4,
-  },
-  subtitle: {
-    fontSize: 14,
-    color: "#7f8c8d",
-  },
-  content: {
-    paddingTop: 8,
-    paddingBottom: 100,
-  },
-  emptyState: {
-    alignItems: "center",
-    justifyContent: "center",
-    paddingVertical: 80,
-  },
-  emptyText: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: "#2c3e50",
-    marginTop: 16,
-  },
-  emptySubtext: {
-    fontSize: 14,
-    color: "#95a5a6",
-    marginTop: 8,
-  },
-  fab: {
-    position: "absolute",
-    bottom: 20,
-    right: 20,
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: "#27ae60",
-    justifyContent: "center",
-    alignItems: "center",
-    shadowColor: "#27ae60",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.4,
-    shadowRadius: 12,
-    elevation: 8,
-  },
-  headerRow: {
-    flexDirection: 'row',
-    justifyContent: 'flex-end',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingTop: 16,
-  },
-  accountIcon: {
-    marginLeft: 8,
-  },
+  container: { flex: 1, backgroundColor: "#f8f9fa" },
+  scrollView: { flex: 1 },
+  header: { paddingHorizontal: 16, paddingVertical: 20 },
+  title: { fontSize: 28, fontWeight: "700", color: "#2c3e50", marginBottom: 4 },
+  subtitle: { fontSize: 14, color: "#7f8c8d" },
+  content: { paddingTop: 8, paddingBottom: 100 },
+  emptyState: { alignItems: "center", justifyContent: "center", paddingVertical: 80 },
+  emptyText: { fontSize: 16, fontWeight: "600", color: "#2c3e50", marginTop: 16 },
+  emptySubtext: { fontSize: 14, color: "#95a5a6", marginTop: 8 },
+  fab: { position: "absolute", bottom: 20, right: 20, width: 56, height: 56, borderRadius: 28, backgroundColor: "#27ae60", justifyContent: "center", alignItems: "center", elevation: 8 },
+  headerRow: { flexDirection: 'row', justifyContent: 'flex-end', alignItems: 'center', paddingHorizontal: 16, paddingTop: 16 },
+  accountIcon: { marginLeft: 8 },
 });

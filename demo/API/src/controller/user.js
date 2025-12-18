@@ -3,7 +3,7 @@ const router = express.Router();
 const jwt = require("jsonwebtoken");
 const UserObject = require("../models/user");
 const config = require("../config");
-const auth = require("../middlewares/auth"); // <--- On importe ton middleware
+const auth = require("../middlewares/auth");
 
 const JWT_MAX_AGE = 60 * 60 * 24 * 7; // 7 jours
 
@@ -90,6 +90,22 @@ router.delete("/delete_user/:id", auth, async (req, res) => {
         if (!deletedUser) return res.status(404).send({ ok: false, message: "User not found" });
         
         res.status(200).send({ ok: true, message: "User deleted" });
+    } catch (error) {
+        res.status(500).send({ ok: false, message: error.message });
+    }
+});
+
+// Récupérer MON profil (route sécurisée)
+router.get("/me", auth, async (req, res) => {
+    try {
+        // req.auth.userId vient du Token décodé par le middleware
+        const user = await UserObject.findById(req.auth.userId).select("-password"); 
+        
+        if (!user) {
+            return res.status(404).send({ ok: false, message: "Utilisateur introuvable" });
+        }
+
+        res.status(200).send({ ok: true, user });
     } catch (error) {
         res.status(500).send({ ok: false, message: error.message });
     }
